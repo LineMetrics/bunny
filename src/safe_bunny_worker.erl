@@ -168,7 +168,9 @@ publish(Channel, Safe, Exchange, Key, Payload) ->
   ok = amqp_channel:register_return_handler(Channel, self()),
   ConfirmTimeout = ?SB_CFG:mq_confirm_timeout(),
   Publish = #'basic.publish'{mandatory = Safe, exchange = Exchange, routing_key = Key},
-  Ret = case amqp_channel:call(Channel, Publish, #amqp_msg{payload = Payload}) of
+  %% set delivery_mode to 2 to make the message persistent
+  Message = #amqp_msg{payload = Payload, props = #'P_basic'{delivery_mode = 2}},
+  Ret = case amqp_channel:call(Channel, Publish, Message) of
     ok ->
       receive
         #'basic.ack'{} -> ok;
