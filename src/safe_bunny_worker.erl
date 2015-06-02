@@ -199,12 +199,15 @@ connect(Config) ->
       Value -> Value
     end
   end,
+  RabbbitHosts = Get(hosts),
+  Index = random:uniform(length(RabbbitHosts)),
+  {Host, Port} = lists:nth(Index,RabbbitHosts),
   new_channel(amqp_connection:start(#amqp_params_network{
     username = Get({s, user}),
     password = Get({s, pass}),
     virtual_host = Get({s, vhost}),
-    port = Get(port),
-    host = Get(host),
+    port = Port,
+    host = Host,
     ssl_options = GetWithDefault(ssl_options, none)
   })).
 
