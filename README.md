@@ -1,3 +1,5 @@
+feed the bunny ...
+
 # About
 
 RabbitMQ delivery with local queuing on failure. It's a bit of boiler plate code
