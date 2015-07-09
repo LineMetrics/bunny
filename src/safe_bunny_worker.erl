@@ -200,7 +200,7 @@ connect(Config) ->
     end
   end,
   RabbbitHosts = Get(hosts),
-  Index = random:uniform(length(RabbbitHosts)),
+  Index = rand:uniform(length(RabbbitHosts)),
   {Host, Port} = lists:nth(Index,RabbbitHosts),
   new_channel(amqp_connection:start(#amqp_params_network{
     username = Get({s, user}),
