@@ -200,6 +200,8 @@ connect(Config) ->
     end
   end,
   RabbbitHosts = Get(hosts),
+   {A,B,C} = erlang:now(),
+   random:seed(A,B,C),
   Index = random:uniform(length(RabbbitHosts)),
   {Host, Port} = lists:nth(Index,RabbbitHosts),
   new_channel(amqp_connection:start(#amqp_params_network{
