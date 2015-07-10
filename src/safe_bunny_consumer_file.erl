@@ -64,14 +64,7 @@ next(Total, State) ->
           Len when Len =:= Total -> throw({done, Acc});
           _ ->
             {ok, Payload} = file:read_file(Filename),
-            [_Ts, Id, Exchange, Key, Attempts] = string:tokens(filename:basename(Filename), "@"),
-            Message = safe_bunny_message:new(
-              list_to_binary(Id),
-              list_to_binary(Exchange),
-              list_to_binary(Key),
-              Payload,
-              list_to_integer(Attempts)
-            ),
+            Message = build_message(Filename, Payload),
             [{Filename, Message}|Acc]
         end
       end, []) of
@@ -113,3 +106,26 @@ delete(Id) ->
 -spec terminate(term(), state()) -> ok.
 terminate(_Reason, _State) ->
   ok.
+
+
+%%%%%%%%%%%%%% internal %%%%%%%%%%%%%%%%%
+%% build message, maybe Exchange is not in filename
+build_message(Filename, Payload) ->
+   build_msg(string:tokens(filename:basename(Filename), "@"), Payload).
+
+build_msg([_Ts, Id, Exchange, Key, Attempts], Payload) ->
+   safe_bunny_message:new(
+      list_to_binary(Id),
+      list_to_binary(Exchange),
+      list_to_binary(Key),
+      Payload,
+      list_to_integer(Attempts)
+   );
+build_msg([_Ts, Id, Key, Attempts], Payload) ->
+   safe_bunny_message:new(
+      list_to_binary(Id),
+      <<>>,
+      list_to_binary(Key),
+      Payload,
+      list_to_integer(Attempts)
+   ).
