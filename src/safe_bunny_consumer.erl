@@ -155,11 +155,13 @@ handle_info(poll, State=#state{
   callback_state = CallbackState
 }) ->
   TotalNextTasks = State#state.concurrent_deliveries - length(State#state.current_tasks),
-  {OpResult, NewCallbackState} = case Module:next(TotalNextTasks, CallbackState) of
-    {ok, NextTasks_, NewCallbackState_} -> {NextTasks_, NewCallbackState_};
-    {error, Error, NewCallbackState_} ->
-      lager:error("~p: Could not poll queue (1): ~p", [Module, Error]),
-      {error, NewCallbackState_}
+  {OpResult, NewCallbackState} =
+     case Module:next(TotalNextTasks, CallbackState) of
+         {ok, NextTasks_, NewCallbackState_} -> {NextTasks_, NewCallbackState_};
+
+         {error, Error, NewCallbackState_} ->
+            lager:error("~p: Could not poll queue (1): ~p", [Module, Error]),
+            {error, NewCallbackState_}
   end,
   {NextPoll, NewState} = try
     case OpResult of

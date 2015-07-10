@@ -80,7 +80,7 @@ next(Total, State) ->
     end
   catch
     _:{done, Ret} -> {ok, lists:reverse(Ret), State};
-    _:Error -> {error, Error}
+    _:Error -> {error, Error, State}
   end.
 
 -spec failed(?SB:queue_id()) -> ?SBC:callback_result().
