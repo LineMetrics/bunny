@@ -82,7 +82,7 @@ failed(Filename) ->
   [Ts, Id, Exchange, Key, Attempts] =
       case string:tokens(filename:basename(Basename), "@") of
          [Ts0, Id0, Exchange0, Key0, Attempts0] -> [Ts0, Id0, Exchange0, Key0, Attempts0];
-         [Ts0, Id0, Key0, Attempts0] -> [Ts0, Id0, "", Key0, Attempts0]
+         [Ts1, Id1, Key1, Attempts1]            -> [Ts1, Id1, "", Key1, Attempts1]
       end,
   NewAttempts = integer_to_list(list_to_integer(Attempts) + 1),
   Directory = ?SB_CFG:file_directory(),
