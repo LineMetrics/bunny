@@ -79,7 +79,11 @@ next(Total, State) ->
 -spec failed(?SB:queue_id()) -> ?SBC:callback_result().
 failed(Filename) ->
   Basename = filename:basename(Filename),
-  [Ts, Id, Exchange, Key, Attempts] = string:tokens(filename:basename(Basename), "@"),
+  [Ts, Id, Exchange, Key, Attempts] =
+      case string:tokens(filename:basename(Basename), "@") of
+         [Ts0, Id0, Exchange0, Key0, Attempts0] -> [Ts0, Id0, Exchange0, Key0, Attempts0];
+         [Ts0, Id0, Key0, Attempts0] -> [Ts0, Id0, "", Key0, Attempts0]
+      end,
   NewAttempts = integer_to_list(list_to_integer(Attempts) + 1),
   Directory = ?SB_CFG:file_directory(),
   NewName = Directory ++ "/" ++ string:join([Ts, Id, Exchange, Key, NewAttempts], "@"),
