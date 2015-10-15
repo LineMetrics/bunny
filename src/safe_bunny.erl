@@ -65,8 +65,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -export([start/0, stop/0]).
 -export([producer_module/1, consumer_module/1]).
--export([queue/3, deliver_safe/3, deliver_unsafe/3]).
--export([queue_task/3, deliver_task/4]).
+-export([queue/3, deliver_safe/3, deliver_unsafe/3, deliver_safe/4, deliver_unsafe/4]).
+-export([queue_task/3, deliver_task/5]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API.
@@ -90,16 +90,22 @@ queue(Exchange, Key, Payload) ->
 %% that much during normal operations.
 -spec deliver_safe(binary(), binary(), binary()) -> {reference(), pid()}.
 deliver_safe(Exchange, Key, Payload) ->
-  cxy_ctl:execute_pid_monitor(
-    ?SAFE_BUNNY_MQ_DELIVER_TASK, ?MODULE, deliver_task, [true, Exchange, Key, Payload]
-  ).
+   deliver_safe(Exchange, Key, Payload, []).
+-spec deliver_safe(binary(), binary(), binary(), list()) -> {reference(), pid()}.
+deliver_safe(Exchange, Key, Payload, Arguments) ->
+   cxy_ctl:execute_pid_monitor(
+      ?SAFE_BUNNY_MQ_DELIVER_TASK, ?MODULE, deliver_task, [true, Exchange, Key, Payload, Arguments]
+   ).
 
 %% @doc Tries MQ. Confirmation is not required from the server, and messages will
 %% not be saved in the fallback queues on failure.
 -spec deliver_unsafe(binary(), binary(), binary()) -> {reference(), pid()}.
 deliver_unsafe(Exchange, Key, Payload) ->
+   deliver_unsafe(Exchange, Key, Payload, []).
+-spec deliver_unsafe(binary(), binary(), binary(), list()) -> {reference(), pid()}.
+deliver_unsafe(Exchange, Key, Payload, Arguments) ->
   cxy_ctl:execute_pid_monitor(
-    ?SAFE_BUNNY_MQ_DELIVER_TASK, ?MODULE, deliver_task, [false, Exchange, Key, Payload]
+    ?SAFE_BUNNY_MQ_DELIVER_TASK, ?MODULE, deliver_task, [false, Exchange, Key, Payload, Arguments]
   ).
 
 %% @doc Returns the module name for the given producer backend module.
@@ -116,9 +122,9 @@ consumer_module(Name) ->
 %%% Called by cxy tools.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% @doc Called by cxy tools, tries mq first, then queue backends.
--spec deliver_task(boolean(), binary(), binary(), binary()) -> ok|term().
-deliver_task(Safe, Exchange, Key, Payload) ->
-  case safe_bunny_worker:deliver(Safe, Exchange, Key, Payload) of
+-spec deliver_task(boolean(), binary(), binary(), binary(), list()) -> ok|term().
+deliver_task(Safe, Exchange, Key, Payload, Args) ->
+  case safe_bunny_worker:deliver(Safe, Exchange, Key, Payload, Args) of
     ok -> ok;
     Error -> case Safe of
       true ->

@@ -49,7 +49,7 @@
 %%% Exports.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Public API.
--export([deliver/4]).
+-export([deliver/5]).
 
 %%% gen_server/worker_pool callbacks.
 -export([
@@ -60,10 +60,10 @@
 %%% Public API.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% @doc Safe implies mandatory, and confirmation required from the mq.
--spec deliver(boolean(), binary(), binary(), binary()) -> ok|term().
-deliver(Safe, Exchange, Key, Payload) ->
+-spec deliver(boolean(), binary(), binary(), binary(), list()) -> ok|term().
+deliver(Safe, Exchange, Key, Payload, Args) ->
   wpool:call(
-    ?MODULE, {deliver, {Safe, Exchange, Key, Payload}}, available_worker, infinity
+    ?MODULE, {deliver, {Safe, Exchange, Key, Payload, Args}}, available_worker, infinity
   ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,9 +136,9 @@ handle_call(
   {deliver, _}, _From, State=#state{available = false}) ->
   {reply, not_available, State};
 
-handle_call({deliver, {Safe, Exchange, Key, Payload}}, _From, State=#state{channel = Channel}) ->
+handle_call({deliver, {Safe, Exchange, Key, Payload, Args}}, _From, State=#state{channel = Channel}) ->
   {Pid, Ref} = spawn_monitor(fun() ->
-    exit(publish(Channel, Safe, Exchange, Key, Payload))
+    exit(publish(Channel, Safe, Exchange, Key, Payload, Args))
   end),
   Ret = receive
     {'DOWN', Ref, process, Pid, Reason} -> case Reason of
@@ -163,13 +163,13 @@ code_change(_OldVsn, State, _Extra) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private API.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-publish(Channel, Safe, Exchange, Key, Payload) ->
+publish(Channel, Safe, Exchange, Key, Payload, Args) ->
   ok = amqp_channel:register_confirm_handler(Channel, self()),
   ok = amqp_channel:register_return_handler(Channel, self()),
   ConfirmTimeout = ?SB_CFG:mq_confirm_timeout(),
   Publish = #'basic.publish'{mandatory = Safe, exchange = Exchange, routing_key = Key},
   %% set delivery_mode to 2 to make the message persistent
-  Message = #amqp_msg{payload = Payload, props = #'P_basic'{delivery_mode = 2}},
+  Message = #amqp_msg{payload = Payload, props = #'P_basic'{delivery_mode = 2, headers=Args}},
   Ret = case amqp_channel:call(Channel, Publish, Message) of
     ok ->
       receive
