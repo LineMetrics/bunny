@@ -23,7 +23,7 @@
   {vsn, "0.1"},
   {id, "safe_bunny"},
   {registered, []},
-  {applications, [kernel, stdlib, compiler, syntax_tools, lager, worker_pool]},
+  {applications, [kernel, stdlib, compiler, syntax_tools, lager, dk_cxy, worker_pool]},
   {mod, {safe_bunny_app, []}},
   {env, []}
  ]

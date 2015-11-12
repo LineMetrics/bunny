@@ -19,6 +19,7 @@
 %%%
 -module(safe_bunny_config).
 -author("marcelog@gmail.com").
+-author("a.minichmair@linemetrics.com").
 -github("https://github.com/marcelog").
 -homepage("http://marcelog.github.com/").
 -license("Apache License 2.0").
@@ -31,7 +32,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Exports.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--export([get_option/1, get_option/2]).
+-export([get_option/1, get_option/2, mq_delivery_mode/0]).
 -export([concurrency_limits/0]).
 -export([consumers/0, producers/0]).
 -export([mq/0]).
@@ -78,6 +79,7 @@ mq() ->
     {pass, "guest"},
     {vhost, "/"},
     {confirm_timeout, 10000},
+    {delivery_mode, 1},
     {reconnect_timeout, 5000}
   ]).
 
@@ -85,6 +87,9 @@ mq() ->
 -spec mq_confirm_timeout() -> pos_integer().
 mq_confirm_timeout() ->
   proplists:get_value(confirm_timeout, mq()).
+
+mq_delivery_mode() ->
+   proplists:get_value(delivery_mode, mq()).
 
 %% @doc Returns ets backend options.
 -spec ets() -> proplists:proplist().

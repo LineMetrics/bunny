@@ -169,7 +169,8 @@ publish(Channel, Safe, Exchange, Key, Payload, Args) ->
   ConfirmTimeout = ?SB_CFG:mq_confirm_timeout(),
   Publish = #'basic.publish'{mandatory = Safe, exchange = Exchange, routing_key = Key},
   %% set delivery_mode to 2 to make the message persistent
-  Message = #amqp_msg{payload = Payload, props = #'P_basic'{delivery_mode = 2, headers=Args}},
+  Message = #amqp_msg{payload = Payload,
+                     props = #'P_basic'{delivery_mode = ?SB_CFG:mq_delivery_mode(), headers=Args}},
   Ret = case amqp_channel:call(Channel, Publish, Message) of
     ok ->
       receive
