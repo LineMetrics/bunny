@@ -211,6 +211,7 @@ connect(Config) ->
     virtual_host = Get({s, vhost}),
     port = Port,
     host = Host,
+    heartbeat = GetWithDefault(heartbeat, 80),
     ssl_options = GetWithDefault(ssl_options, none)
   })).
 
